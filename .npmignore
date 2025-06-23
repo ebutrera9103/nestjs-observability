@@ -1,0 +1,8 @@
+.git
+.gitignore
+node_modules/
+src/ # We only want `dist` contents
+*.ts # We only want compiled JS
+*.map
+test/
+*.spec.ts

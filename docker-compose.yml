@@ -1,0 +1,43 @@
+version: '3.8'
+
+networks:
+  observability-net:
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - '16686:16686' # Jaeger UI
+    networks:
+      - observability-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: otel-collector
+    command: ['--config=/etc/otel-collector-config.yaml']
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - '4317:4317' # OTLP gRPC port
+      - '4318:4318' # OTLP HTTP port (optional, good to keep)
+    depends_on:
+      - jaeger
+    networks:
+      - observability-net
+
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-app
+    ports:
+      - '3000:3000'
+    environment:
+      # --- THIS IS THE FIX ---
+      # Removed the "http://" prefix. gRPC endpoints should not have a scheme.
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+    depends_on:
+      - otel-collector
+    networks:
+      - observability-net

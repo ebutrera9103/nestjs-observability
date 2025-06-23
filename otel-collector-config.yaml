@@ -1,0 +1,29 @@
+# This file configures the OpenTelemetry Collector
+
+# 1. Receivers: How data gets into the collector
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+# 2. Exporters: Where the collector sends the data
+exporters:
+  # The exporter to send data to Jaeger
+  otlphttp:
+    endpoint: http://jaeger:4318
+
+# 3. Processors: How data is processed in-flight
+processors:
+  batch:
+
+# 4. Service: The pipeline that connects everything
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      # We are now only exporting to Jaeger
+      exporters: [otlphttp]
