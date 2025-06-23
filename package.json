@@ -1,7 +1,6 @@
 {
   "name": "@secretsy/nestjs-observability-test",
   "version": "1.0.1",
-  "private": true,
   "description": "A runnable test app for the NestJS Observability module",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
