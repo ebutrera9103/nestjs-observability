@@ -59,12 +59,6 @@ Modify your `package.json` scripts to ensure `telemetry/init.ts` (or its compile
   }
 }
 ```
-
-**Important Notes:**
-
-- **`tsconfig.json`:** Ensure your main `tsconfig.json` (in the service root) includes the `telemetry` folder in its `include` array (e.g., `"include": ["./app/**/*.ts", "./telemetry/**/*.ts"]`) so `init.ts` gets compiled during the `build` step.
-- **`ts-node`:** For `start:dev`, ensure `ts-node` is installed as a development dependency (`npm install -D ts-node`).
-
 ---
 
 ## 1\. Installation
