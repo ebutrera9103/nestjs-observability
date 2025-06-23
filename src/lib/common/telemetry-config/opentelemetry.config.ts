@@ -3,6 +3,7 @@ import { credentials } from '@grpc/grpc-js';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
+import { GraphQLInstrumentation } from '@opentelemetry/instrumentation-graphql';
 import { Resource } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -17,31 +18,32 @@ export const initOpenTelemetry = (serviceName: string) => {
     resource: new Resource({
       [ATTR_SERVICE_NAME]: serviceName,
     }),
-
     spanProcessors: [new BatchSpanProcessor(traceExporter)],
-
     instrumentations: [
       new HttpInstrumentation(),
       new ExpressInstrumentation(),
       new NestInstrumentation(),
+      new GraphQLInstrumentation({
+        depth: 10,
+        mergeItems: true,
+        ignoreTrivialResolveSpans: false,
+        // The responseHook has been removed.
+        // User attributes will now be added via the TelemetryInterceptor.
+      }),
     ],
   });
 
   try {
     sdk.start();
-    console.log('OpenTelemetry SDK started successfully.');
+    console.log(
+      'OpenTelemetry SDK started successfully. User attributes will be handled by TelemetryInterceptor.'
+    );
   } catch (error) {
     console.error('Error starting OpenTelemetry SDK:', error);
   }
 
   process.on('SIGTERM', () => {
-    sdk
-      .shutdown()
-      .then(() => console.log('OpenTelemetry SDK shut down successfully.'))
-      .catch((error) =>
-        console.log('Error shutting down OpenTelemetry SDK.', error)
-      )
-      .finally(() => process.exit(0));
+    sdk.shutdown();
   });
 
   return sdk;

@@ -42,7 +42,7 @@ export class RequestContextService {
   async startSpan<T>(
     name: string,
     fn: (span: opentelemetry.Span) => Promise<T>,
-    options?: opentelemetry.SpanOptions,
+    options?: opentelemetry.SpanOptions
   ): Promise<T> {
     const tracer = this.getTracer('custom-logic');
     const span = tracer.startSpan(name, options, this.activeContext);

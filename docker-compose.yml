@@ -34,8 +34,6 @@ services:
     ports:
       - '3000:3000'
     environment:
-      # --- THIS IS THE FIX ---
-      # Removed the "http://" prefix. gRPC endpoints should not have a scheme.
       - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
     depends_on:
       - otel-collector

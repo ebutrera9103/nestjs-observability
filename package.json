@@ -1,11 +1,11 @@
 {
-  "name": "@secretsy/nestjs-observability-test",
-  "version": "1.0.1",
+  "name": "@secretsy/nestjs-observability",
+  "version": "1.0.14",
   "description": "A runnable test app for the NestJS Observability module",
-  "main": "dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist/lib"
+    "dist"
   ],
   "scripts": {
     "build:all": "rimraf dist && tsc -p tsconfig.json",
