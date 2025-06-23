@@ -1,6 +1,3 @@
-Of course\! Here is the content of the README in plain Markdown format for you to copy.
-
-````markdown
 # NestJS Observability Module
 
 A shared NestJS module that provides out-of-the-box observability using **OpenTelemetry**. This module automatically instruments your application to generate and export distributed traces, giving you deep insights into your microservices architecture.
@@ -26,6 +23,7 @@ In your terminal, run the following command to log in to the CodeArtifact NPM re
 ```bash
 aws codeartifact login --tool npm --repository nestjs-private-packages --domain secretsy --scope @secretsy
 ```
+
 ````
 
 ### Step 1.2: Install the Package
@@ -147,6 +145,5 @@ export class MyFeatureService {
 
 This will create a new span named `doComplexWork` inside the main request trace, giving you a precise measurement of how long your specific operation took.
 
-```
 
-```
+````
