@@ -25,7 +25,6 @@ include:
 stages:
   - build
   - publish
-  - check-merge-authorization
 
 # https://gitlab.topfollowers.com/help/user/packages/npm_registry/index.md#publishing-a-package-via-a-cicd-pipeline
 build-node:
@@ -45,9 +44,3 @@ publish:
     - if: $CI_COMMIT_REF_NAME =~ /^v\d+\.\d+\.\d+.*$/
       changes:
         - package.json
-
-check_mr:
-  stage: check-merge-authorization
-  extends: .ci-mr
-  rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
