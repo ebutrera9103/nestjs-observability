@@ -1,16 +1,41 @@
-version: '3.8'
-
 networks:
   observability-net:
 
 services:
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+    ports:
+      - "8080:80"
+    networks:
+      - observability-net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
+    environment:
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+    volumes:
+      - ./mnt/efs/badger:/badger
     ports:
-      - '16686:16686' # Jaeger UI
+      - '16686:16686' # Jaeger UI tGQTGB2U7UafLMd0dWe
     networks:
       - observability-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jaeger.rule=Host(`localhost`)"
+      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.routers.jaeger.middlewares=auth"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+      - 'traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$2xB5CWab$$az5FjLyTWHpA7wqm2omwV/'
 
   otel-collector:
     image: otel/opentelemetry-collector:latest
@@ -19,8 +44,8 @@ services:
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - '4317:4317' # OTLP gRPC port
-      - '4318:4318' # OTLP HTTP port (optional, good to keep)
+      - '4317:4317'
+      - '4318:4318'
     depends_on:
       - jaeger
     networks:

@@ -21,9 +21,37 @@ processors:
 
 # 4. Service: The pipeline that connects everything
 service:
+  extensions: [jaeger_storage, healthcheckv2]
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
       # We are now only exporting to Jaeger
-      exporters: [otlphttp]
+      exporters: [otlphttp, jaeger_storage_exporter]
+  telemetry:
+    resource:
+      service.name: jaeger
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+    logs:
+      level: info
+
+extensions:
+  healthcheckv2:
+    use_v2: true
+    http:
+
+  jaeger_storage:
+    backends:
+      efs:
+        badger:
+          directories:
+            keys: "/badger/key/"
+            values: "/badger/data/"
+          ephemeral: false
