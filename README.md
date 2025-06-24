@@ -72,8 +72,15 @@ This module is hosted in our private package registry [inside Gitlab](https://gi
 In your terminal, run the following command to log in to the NPM registry. This command only needs to be run once until the token expires.
 
 ```bash
+  sudo cat <<EOF > ~/.npmrc
+# Default registry for most packages
+registry=https://registry.npmjs.org/
+# Scope for your private packages, directing them to GitLab
+@fanatyx:registry=https://gitlab.topfollowers.com/api/v4/packages/npm/
+# Authentication token for your GitLab registry
+//gitlab.topfollowers.com/api/v4/packages/npm/:_authToken=YOUR_GITLAB_AUTH_TOKEN
 # more here https://gitlab.topfollowers.com/help/user/packages/npm_registry/index
-echo @fanatyx:registry=https://gitlab.topfollowers.com/api/v4/packages/npm/:_authToken="${GITLAB_TOKEN}" >> .npmrc
+EOF
 ```
 
 ### Step 1.2: Install the Package
