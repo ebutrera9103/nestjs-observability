@@ -1,5 +1,5 @@
 {
-  "name": "@secretsy/nestjs-observability",
+  "name": "@fanatyx/nestjs-observability",
   "version": "1.0.14",
   "description": "A runnable test app for the NestJS Observability module",
   "main": "dist/index.js",
@@ -10,7 +10,8 @@
   "scripts": {
     "build:all": "rimraf dist && tsc -p tsconfig.json",
     "build:lib": "rimraf dist && tsc -p tsconfig.build.json",
-    "prepublishOnly": "npm run build:lib"
+    "prepublishOnly": "npm run build:lib",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
     "nestjs",
