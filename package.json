@@ -1,6 +1,6 @@
 {
   "name": "@fanatyx/nestjs-observability",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "A runnable test app for the NestJS Observability module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

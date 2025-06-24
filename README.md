@@ -63,16 +63,17 @@ Modify your `package.json` scripts to ensure `telemetry/init.ts` (or its compile
 
 ## 1\. Installation
 
-This module is hosted in a private AWS CodeArtifact repository. Before you can install it, you must configure your local environment to authenticate with AWS.
+This module is hosted in our private package registry [inside Gitlab](https://gitlab.topfollowers.com/fanatyx/nestjs-observability/-/packages/). Before you can install it, you must configure your local environment to authenticate with Gitlab.
 
-### Step 1.1: Authenticate with AWS
+### Step 1.1: Authenticate with Gitlab
 
-> **Prerequisite:** You must have the [AWS CLI](https://aws.amazon.com/cli/) installed and configured with valid credentials.
+> **Prerequisite:** You must have a [gitlab token](https://gitlab.topfollowers.com/-/user_settings/personal_access_tokens ) installed and configured with valid credentials.
 
-In your terminal, run the following command to log in to the CodeArtifact NPM registry. This command only needs to be run once per 12-hour session.
+In your terminal, run the following command to log in to the NPM registry. This command only needs to be run once until the token expires.
 
 ```bash
-aws codeartifact login --tool npm --repository nestjs-private-packages --domain secretsy --scope @secretsy
+# more here https://gitlab.topfollowers.com/help/user/packages/npm_registry/index
+echo @fanatyx:registry=https://gitlab.topfollowers.com/api/v4/packages/npm/:_authToken="${GITLAB_TOKEN}" >> .npmrc
 ```
 
 ### Step 1.2: Install the Package
@@ -80,7 +81,7 @@ aws codeartifact login --tool npm --repository nestjs-private-packages --domain 
 Once authenticated, install the module into your NestJS project using npm.
 
 ```bash
-npm install @secretsy/nestjs-observability
+npm install @fanatyx/nestjs-observability
 ```
 
 ---
