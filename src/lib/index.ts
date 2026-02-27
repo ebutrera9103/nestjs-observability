@@ -1,5 +1,5 @@
 /**
- * This is the main entry point for the @secretsy/nestjs-observability package.
+ * This is the main entry point for the @fanatyx/nestjs-observability package.
  * It explicitly exports all public-facing modules, services, and functions.
  */
 

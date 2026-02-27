@@ -31,21 +31,6 @@ A shared NestJS module that provides out-of-the-box distributed tracing and obse
 
 ## Installation
 
-### 1. Authenticate with the private registry
-
-This module is hosted on a [private GitLab NPM registry](https://gitlab.topfollowers.com/fanatyx/nestjs-observability/-/packages/). Configure your `.npmrc` to authenticate:
-
-```bash
-cat <<EOF >> ~/.npmrc
-@fanatyx:registry=https://gitlab.topfollowers.com/api/v4/packages/npm/
-//gitlab.topfollowers.com/api/v4/packages/npm/:_authToken=YOUR_GITLAB_AUTH_TOKEN
-EOF
-```
-
-> **Note:** You need a [GitLab personal access token](https://gitlab.topfollowers.com/-/user_settings/personal_access_tokens) with `read_api` scope. This only needs to be done once.
-
-### 2. Install the package
-
 ```bash
 npm install @fanatyx/nestjs-observability
 ```

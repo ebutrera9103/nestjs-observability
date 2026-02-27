@@ -1,7 +1,7 @@
 {
   "name": "@fanatyx/nestjs-observability",
   "version": "1.0.15",
-  "description": "A runnable test app for the NestJS Observability module",
+  "description": "A NestJS module providing out-of-the-box distributed tracing and observability using OpenTelemetry",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,34 +16,58 @@
   "keywords": [
     "nestjs",
     "telemetry",
-    "opentelemetry"
+    "opentelemetry",
+    "tracing",
+    "observability"
   ],
-  "author": "Eric Utrera/Secretsy",
+  "author": "Eric Utrera",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "@nestjs/common": "^10.3.10",
-    "@nestjs/core": "^10.3.10",
-    "@nestjs/graphql": "^12.0.0",
-    "@nestjs/platform-express": "^10.0.0",
+    "@grpc/grpc-js": "^1.10.0",
     "@opentelemetry/api": "^1.8.0",
-    "@opentelemetry/auto-instrumentations-node": "^0.46.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.52.0",
     "@opentelemetry/instrumentation-express": "^0.41.0",
+    "@opentelemetry/instrumentation-graphql": "^0.42.0",
     "@opentelemetry/instrumentation-http": "^0.52.0",
     "@opentelemetry/instrumentation-nestjs-core": "^0.37.0",
     "@opentelemetry/resources": "^1.25.0",
     "@opentelemetry/sdk-node": "^0.52.0",
+    "@opentelemetry/sdk-trace-base": "^1.25.0",
     "@opentelemetry/sdk-trace-node": "^1.25.0",
-    "@opentelemetry/semantic-conventions": "^1.25.0",
-    "graphql": "^16.8.1",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "@opentelemetry/semantic-conventions": "^1.25.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/graphql": "^12.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "graphql": "^16.0.0",
+    "reflect-metadata": "^0.1.13 || ^0.2.0",
+    "rxjs": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/graphql": {
+      "optional": true
+    },
+    "graphql": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
+    "@nestjs/common": "^10.3.10",
+    "@nestjs/core": "^10.3.10",
+    "@nestjs/graphql": "^12.0.0",
+    "@nestjs/platform-express": "^10.0.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.14.9",
+    "graphql": "^16.8.1",
+    "reflect-metadata": "^0.1.13",
     "rimraf": "^6.0.1",
+    "rxjs": "^7.8.1",
     "typescript": "^5.5.2"
   }
 }
