@@ -1,305 +1,287 @@
-# NestJS Observability Module
+# @fanatyx/nestjs-observability
 
-A shared NestJS module that provides out-of-the-box observability using **OpenTelemetry**. This module automatically instruments your application to generate and export distributed traces, giving you deep insights into your microservices architecture.
+A shared NestJS module that provides out-of-the-box distributed tracing and observability using **OpenTelemetry**. Automatically instruments your application to generate and export distributed traces, giving you deep insights into your microservices architecture.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Integration Guide](#integration-guide)
+- [Integration Example](docs/INTEGRATION_EXAMPLE.md)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+- [Advanced Usage: Custom Spans](#advanced-usage-custom-spans)
+- [Local Development](#local-development)
+- [License](#license)
 
 ## Features
 
-- **Zero-Configuration Tracing:** Automatically traces all incoming HTTP and GraphQL requests.
-- **Distributed Context Propagation:** Seamlessly propagates trace context across service boundaries.
-- **Rich Metadata:** Enriches traces with useful metadata like HTTP routes, status codes, and user information from JWTs.
-- **Custom Span Support:** Provides a simple service to create custom child spans for fine-grained performance monitoring of your business logic.
-- **Standardized:** Built on OpenTelemetry, the industry standard for observability.
+- **Zero-Configuration Tracing** — Automatically traces all incoming HTTP and GraphQL requests.
+- **Distributed Context Propagation** — Seamlessly propagates trace context across service boundaries.
+- **Rich Metadata** — Enriches traces with HTTP routes, status codes, and user information from JWTs.
+- **Custom Span Support** — Provides a simple service to create custom child spans for fine-grained performance monitoring.
+- **Standardized** — Built on [OpenTelemetry](https://opentelemetry.io/), the industry standard for observability.
 
----
+## Prerequisites
 
-## Initial Setup: Early SDK Initialization
+- **Node.js** >= 18
+- **NestJS** >= 10
+- An **OpenTelemetry Collector** endpoint (e.g., [Jaeger](https://www.jaegertracing.io/), [Grafana Tempo](https://grafana.com/oss/tempo/))
 
-For comprehensive tracing, the OpenTelemetry SDK must be initialized **before** your NestJS application fully bootstraps. This ensures that all components, even those loaded very early, are properly instrumented. This is achieved by using Node.js's `--require` flag to load a dedicated TypeScript file containing the SDK initialization logic.
+## Installation
 
-### 0.1: Prepare the Telemetry Initialization File
+### 1. Authenticate with the private registry
 
-**Create a new folder named `telemetry` in the root of your service** (next to `package.json`). Inside this folder, create a file named `init.ts`. This file will contain the minimal code to initialize the OpenTelemetry SDK.
-
-```typescript
-// telemetry/init.ts (in your service root, e.g., TF-USER/telemetry/init.ts)
-
-import { initOpenTelemetry } from '@secretsy/nestjs-observability';
-
-console.log('--- [Tracing Loader] Initializing OpenTelemetry Tracing ---');
-
-// Initialize tracing for your microservice.
-// Replace 'user-microservice' with the actual name of your service.
-initOpenTelemetry('user-microservice');
-```
-
-### 0.2: Configure `package.json` Scripts
-
-Modify your `package.json` scripts to ensure `telemetry/init.ts` (or its compiled counterpart) is executed at the correct time for both development and production environments.
-
-```json
-// package.json
-
-{
-  "scripts": {
-    // ... other scripts
-
-    // Build script: Ensure telemetry/init.ts is compiled alongside your app.
-    // This command compiles init.ts to dist/telemetry/init.js
-    // and then builds your 'user' NestJS project.
-    "build": "tsc telemetry/init.ts --outDir dist/telemetry && nest build user",
-
-    // Production script: Uses Node.js's --require flag to load the compiled
-    // init.js before starting the main application.
-    "start:prod": "node --require ./dist/telemetry/init.js dist/app/main.js",
-
-    // A convenience script to run your production build.
-    "user": "npm run start:prod"
-
-    // ... rest of your scripts
-  }
-}
-```
----
-
-## 1\. Installation
-
-This module is hosted in our private package registry [inside Gitlab](https://gitlab.topfollowers.com/fanatyx/nestjs-observability/-/packages/). Before you can install it, you must configure your local environment to authenticate with Gitlab.
-
-### Step 1.1: Authenticate with Gitlab
-
-> **Prerequisite:** You must have a [gitlab token](https://gitlab.topfollowers.com/-/user_settings/personal_access_tokens ) installed and configured with valid credentials.
-
-In your terminal, run the following command to log in to the NPM registry. This command only needs to be run once until the token expires.
+This module is hosted on a [private GitLab NPM registry](https://gitlab.topfollowers.com/fanatyx/nestjs-observability/-/packages/). Configure your `.npmrc` to authenticate:
 
 ```bash
-  sudo cat <<EOF > ~/.npmrc
-# Default registry for most packages
-registry=https://registry.npmjs.org/
-# Scope for your private packages, directing them to GitLab
+cat <<EOF >> ~/.npmrc
 @fanatyx:registry=https://gitlab.topfollowers.com/api/v4/packages/npm/
-# Authentication token for your GitLab registry
 //gitlab.topfollowers.com/api/v4/packages/npm/:_authToken=YOUR_GITLAB_AUTH_TOKEN
-# more here https://gitlab.topfollowers.com/help/user/packages/npm_registry/index
 EOF
 ```
 
-### Step 1.2: Install the Package
+> **Note:** You need a [GitLab personal access token](https://gitlab.topfollowers.com/-/user_settings/personal_access_tokens) with `read_api` scope. This only needs to be done once.
 
-Once authenticated, install the module into your NestJS project using npm.
+### 2. Install the package
 
 ```bash
 npm install @fanatyx/nestjs-observability
 ```
 
----
+## Integration Guide
 
-## 2\. Quick Start
+Follow these 4 steps to add observability to your NestJS service.
 
-To enable tracing across your entire application, import the `TelemetryModule` into your root `AppModule`.
+### Step 1 — Create the telemetry init file
+
+OpenTelemetry must hook into Node.js **before** your application code loads (so it can patch `http`, `express`, etc.). Create this file at the root of your project:
+
+```
+my-service/
+├── telemetry/
+│   └── init.ts        <-- create this
+├── src/
+│   ├── app.module.ts
+│   └── main.ts
+├── package.json
+└── tsconfig.json
+```
+
+```typescript
+// telemetry/init.ts
+
+import { initOpenTelemetry } from '@fanatyx/nestjs-observability';
+
+// Use your service name — this is how it appears in Jaeger/Tempo.
+initOpenTelemetry('my-service-name');
+```
+
+### Step 2 — Update build and start scripts
+
+The init file must be compiled separately (it lives outside `src/`) and loaded via Node.js's `--require` flag so it runs **before** your app:
+
+```json
+{
+  "scripts": {
+    "build": "tsc telemetry/init.ts --outDir dist/telemetry && nest build",
+    "start:prod": "node --require ./dist/telemetry/init.js dist/main.js"
+  }
+}
+```
+
+> **Why `--require`?** OpenTelemetry works by monkey-patching Node.js modules (`http`, `express`, etc.) at import time. If your app imports these modules before the SDK initializes, those imports won't be instrumented. `--require` guarantees the SDK loads first.
+
+### Step 3 — Import TelemetryModule
+
+Add `TelemetryModule` to your root `AppModule`. It's a global module, so you only need to import it once:
 
 ```typescript
 // src/app.module.ts
 
 import { Module } from '@nestjs/common';
-import { TelemetryModule } from '@secretsy/nestjs-observability';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { TelemetryModule } from '@fanatyx/nestjs-observability';
 
 @Module({
   imports: [
-    // Import the TelemetryModule here
     TelemetryModule,
     // ... your other modules
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
 ```
 
----
+### Step 4 — Set the collector endpoint
 
-## 3\. Configuration
-
-The module's behavior is configured through environment variables.
-
-### Step 3.1: Initialize the SDK
-
-For the module to work, you **must** initialize the OpenTelemetry SDK in your application's entrypoint file (`src/main.ts`). This ensures that tracing is active _before_ any other part of your application starts.
-
-```typescript
-// src/main.ts
-
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-// Import the initialization function
-// import { initOpenTelemetry } from '@secretsy/nestjs-observability'; // This import might become redundant
-
-async function bootstrap() {
-  // Call the initialization function first, providing a service name.
-  // This name will identify your service in observability platforms like Jaeger or Honeycomb.
-  // NOTE: This step is now primarily handled by the 'telemetry/init.ts' file and package.json scripts.
-  // You can safely remove the 'initOpenTelemetry' call from here if 'telemetry/init.ts'
-  // is configured to handle all SDK initialization.
-  // initOpenTelemetry('my-awesome-nestjs-service'); // Consider removing this line if telemetry/init.ts handles it.
-
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
-}
-bootstrap();
-```
-
-### Step 3.2: Configure the Collector Endpoint
-
-The SDK needs to know where to send its trace data. Provide the address of your OpenTelemetry Collector via an environment variable. Typically, this would point to a central collector in your staging or production environment.
+Tell the SDK where to send traces by setting this environment variable (gRPC address of your OpenTelemetry Collector):
 
 ```env
-# In your environment
-OTEL_EXPORTER_OTLP_ENDPOINT=my-central-collector.my-domain.com:4317
+OTEL_EXPORTER_OTLP_ENDPOINT=my-collector:4317
 ```
 
----
+Set this in your `.env`, Docker Compose, Kubernetes manifest, or however you manage environment variables.
 
-## 4\. Advanced Usage: Creating Custom Spans
+### Verify it works
 
-While the module automatically traces incoming requests, you may want to measure the performance of specific functions or operations within your business logic. You can achieve this by creating custom "child spans".
+Start your service, make a few requests, and check your tracing backend (Jaeger, Tempo, etc.). You should see spans for every HTTP/GraphQL request with your service name.
 
-### Step 4.1: Inject the `RequestContextService`
+```bash
+# Build and start
+npm run build
+npm run start:prod
 
-The `RequestContextService` provides a `startSpan` method to easily create and manage child spans. Inject it into any service where you need custom tracing.
+# In another terminal
+curl http://localhost:3000/any-route
+```
+
+If you see `OpenTelemetry SDK started successfully` in your logs, tracing is active.
+
+> **Want a full, realistic example?** See the [Integration Example](docs/INTEGRATION_EXAMPLE.md) guide — it walks through a complete User Service with custom spans, controller setup, and Jaeger traces.
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Example |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | gRPC address of your OpenTelemetry Collector | `my-collector:4317` |
+
+### What gets instrumented automatically
+
+| Layer | Instrumentation |
+|---|---|
+| HTTP | Request method, URL, status code, headers |
+| Express | Middleware and route handler timing |
+| NestJS | Controller and handler resolution |
+| GraphQL | Query/mutation resolver execution (depth: 10) |
+
+### User enrichment
+
+The `TelemetryInterceptor` automatically extracts user information from the request object (populated by your auth guard) and adds it to spans:
+
+- `app.user.id` — from `req.user._id` or `req.user.sub`
+- `app.user.username` — from `req.user.username`
+
+This works for both HTTP and GraphQL contexts.
+
+## API Reference
+
+### `initOpenTelemetry(serviceName: string)`
+
+Initializes the OpenTelemetry SDK with pre-configured instrumentations. **Must be called before NestJS bootstraps** (via `--require` flag).
+
+- **serviceName** — Identifies your service in tracing backends (e.g., Jaeger).
+- **Returns** — The `NodeSDK` instance.
+- Registers a `SIGTERM` handler for graceful shutdown.
+
+### `TelemetryModule`
+
+A `@Global()` NestJS module. Import it once in your root `AppModule` — it becomes available everywhere.
+
+**Provides:**
+
+- `RequestContextService` — Exported for injection into your services.
+- `TelemetryInterceptor` — Registered as a global `APP_INTERCEPTOR` (automatic).
+
+### `RequestContextService`
+
+An `@Injectable()` service with `REQUEST` scope for managing trace context.
+
+**Properties:**
+
+| Property | Type | Description |
+|---|---|---|
+| `activeContext` | `Context` | The current OpenTelemetry context |
+| `activeSpan` | `Span \| undefined` | The current active span |
+
+**Methods:**
+
+| Method | Description |
+|---|---|
+| `getTracer(name, version?)` | Returns an OpenTelemetry `Tracer` instance |
+| `withContext(context, fn)` | Executes a function within a specific OpenTelemetry context |
+| `startSpan(name, fn, options?)` | Creates a child span, executes `fn` with it, and handles status/errors automatically |
+
+## Advanced Usage: Custom Spans
+
+Inject `RequestContextService` to create child spans for measuring specific operations:
 
 ```typescript
-// src/my-feature/my-feature.service.ts
-
 import { Injectable } from '@nestjs/common';
-import { RequestContextService } from '@secretsy/nestjs-observability';
+import { RequestContextService } from '@fanatyx/nestjs-observability';
 
 @Injectable()
-export class MyFeatureService {
-  constructor(
-    // Inject the service
-    private readonly telemetryContext: RequestContextService
-  ) {}
+export class OrderService {
+  constructor(private readonly telemetry: RequestContextService) {}
 
-  async doComplexWork(userId: string): Promise<any> {
-    // Use the startSpan method to wrap your operation
-    return this.telemetryContext.startSpan('doComplexWork', async (span) => {
-      // 'span' is the newly created child span.
-      // You can add custom attributes for context and filtering.
-      span.setAttribute('app.user.id', userId);
-      span.addEvent('Starting database query...');
+  async processOrder(orderId: string): Promise<Order> {
+    return this.telemetry.startSpan('processOrder', async (span) => {
+      span.setAttribute('app.order.id', orderId);
+      span.addEvent('Validating order');
 
-      // --- Your complex business logic here ---
-      const result = await this.database.find({ user: userId });
-      await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate work
-      // ---
+      const order = await this.validateAndSave(orderId);
 
-      span.addEvent('Database query finished.');
-      span.setAttribute('app.items.found', result.length);
-
-      return result;
+      span.setAttribute('app.order.total', order.total);
+      return order;
     });
   }
 }
 ```
 
-This will create a new span named `doComplexWork` inside the main request trace, giving you a precise measurement of how long your specific operation took.
+The span is automatically:
+- Set to `OK` status on success
+- Set to `ERROR` status with exception recording on failure
+- Ended in a `finally` block (always cleaned up)
 
----
+## Local Development
 
-## 5\. For Module Developers: Local Testing Environment
+This section is for **contributors to this module**. The repository includes a complete local observability stack for testing.
 
-This section is for developers who are **contributing to this module**. The following files are included in this repository to provide a self-contained environment for testing the module's functionality locally.
-
-### Step 5.1: Repository Files
-
-This repository contains the following configuration files to run the included test application (`src/test-app`) and a local observability stack:
-
-- `docker-compose.yml`: Defines the test application, Jaeger, and Collector services.
-- `Dockerfile`: Instructs Docker how to build the test application.
-- `otel-collector-config.yaml`: Configures the OpenTelemetry Collector.
-
-**`docker-compose.yml`**
-
-```yaml
-version: '3.8'
-
-networks:
-  observability-net:
-
-services:
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger
-    ports:
-      - '16686:16686'
-    networks:
-      - observability-net
-
-  otel-collector:
-    image: otel/opentelemetry-collector:latest
-    container_name: otel-collector
-    command: ['--config=/etc/otel-collector-config.yaml']
-    volumes:
-      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    ports:
-      - '4317:4317'
-    depends_on:
-      - jaeger
-    networks:
-      - observability-net
-
-  nestjs-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nestjs-app
-    ports:
-      - '3000:3000'
-    environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
-    depends_on:
-      - otel-collector
-    networks:
-      - observability-net
-```
-
-**`otel-collector-config.yaml`**
-
-```yaml
-receivers:
-  otlp:
-    protocols:
-      grpc:
-        endpoint: 0.0.0.0:4317
-
-exporters:
-  otlphttp:
-    endpoint: http://jaeger:4318
-
-processors:
-  batch:
-
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlphttp]
-```
-
-### Step 5.2: Running the Local Test Environment
-
-From the root of this repository, run the following command:
+### Running the stack
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
-This will build and start the test application, the collector, and Jaeger.
+This starts:
 
-### Step 5.3: Viewing Traces
+| Service | Port | Description |
+|---|---|---|
+| **nestjs-app** | `3000` | Test NestJS application |
+| **otel-collector** | `4317` (gRPC), `4318` (HTTP) | OpenTelemetry Collector |
+| **jaeger** | `16686` | Tracing UI |
+| **traefik** | `8080` | Reverse proxy |
 
-1.  Make a few API requests to the test application: `http://localhost:3000/test-route`
-2.  Open the Jaeger UI in your browser: **[http://localhost:16686](https://www.google.com/search?q=http://localhost:16686)**
-3.  Select the `isolated-telemetry-test-app` service from the dropdown and click "Find Traces".
+### Viewing traces
+
+1. Make a request to the test app:
+   ```bash
+   curl http://localhost:3000/test-route
+   ```
+2. Open Jaeger UI at http://localhost:16686
+3. Select the `isolated-telemetry-test-app` service and click **Find Traces**
+
+### Project structure
+
+```
+src/
+├── lib/                              # Published library
+│   ├── index.ts                      # Public exports
+│   ├── telemetry.module.ts           # Global NestJS module
+│   └── common/
+│       ├── context/
+│       │   └── request-context.ts    # RequestContextService
+│       ├── interceptors/
+│       │   └── telemetry.interceptor.ts
+│       └── telemetry-config/
+│           └── opentelemetry.config.ts
+└── test-app/                         # Local test application
+    ├── main.ts
+    ├── app.module.ts
+    └── app.controller.ts
+```
+
+## License
+
+MIT
