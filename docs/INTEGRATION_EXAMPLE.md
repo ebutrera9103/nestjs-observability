@@ -54,6 +54,8 @@ Everything else stays untouched.
 
 ### Step 1 — Install the package
 
+> **Note:** The `@fanatyx/nestjs-observability` package is private. See the [Installation](../README.md#installation) section in the README for how to install it locally or publish it under your own scope.
+
 ```bash
 npm install @fanatyx/nestjs-observability
 ```

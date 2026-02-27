@@ -2,6 +2,8 @@
 
 A shared NestJS module that provides out-of-the-box distributed tracing and observability using **OpenTelemetry**. Automatically instruments your application to generate and export distributed traces, giving you deep insights into your microservices architecture.
 
+> **Note:** This is a **teaching and portfolio project**. The `@fanatyx/nestjs-observability` npm package is private and not available on public registries. However, the full source code is here — you can clone this repo and publish it to your own npm registry, use it as a local dependency, or simply use it as a reference for implementing OpenTelemetry in your own NestJS projects.
+
 ## Table of Contents
 
 - [Features](#features)
@@ -31,9 +33,29 @@ A shared NestJS module that provides out-of-the-box distributed tracing and obse
 
 ## Installation
 
+The `@fanatyx/nestjs-observability` package is not published to a public registry. To use it in your own project, choose one of these options:
+
+**Option A — Install as a local dependency (quickest for trying it out):**
+
 ```bash
-npm install @fanatyx/nestjs-observability
+# Clone the repo
+git clone https://github.com/ebutrera9103/nestjs-observability.git
+
+# Build the library
+cd nestjs-observability
+npm install && npm run build:lib
+
+# In your project, reference it by path
+npm install ../nestjs-observability
 ```
+
+**Option B — Publish to your own registry:**
+
+Fork or clone this repo, update the package name in `package.json` to your own scope (e.g., `@yourorg/nestjs-observability`), and publish to your npm registry or GitHub Packages.
+
+**Option C — Use as a reference:**
+
+Browse the source code in `src/lib/` and adapt the patterns into your own project.
 
 ## Integration Guide
 
